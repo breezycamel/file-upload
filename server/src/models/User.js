@@ -42,6 +42,7 @@ UserSchema.methods.comparePassword = function(candidatePassword, cb) {
 UserSchema.methods.generateJWT = function() {
 	var today = new Date();
 	var exp = new Date(today);
+	//Set expiration date 60 days from today
 	exp.setDate(today.getDate() + 60);
 	
 	return jwt.sign({

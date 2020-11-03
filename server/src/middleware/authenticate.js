@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const User = require('../models/User.js');
 
+//Middleware for authenticating requests
 const authenicateJWT = (req, res, next) => {
 	const authHeader = req.headers.authorization;
 
