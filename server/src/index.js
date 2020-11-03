@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const multer = require('multer');
 const GridFsStorage = require('multer-gridfs-storage');
-const authenicateJWT = require('./routes/authenticate');
+const authenicateJWT = require('./middleware/authenticate');
 const connection = mongoose.connection;
 require('dotenv').config();
 const app  = express();
