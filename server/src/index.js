@@ -4,36 +4,21 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const multer = require('multer');
 const GridFsStorage = require('multer-gridfs-storage');
+const authenicateJWT = require('./routes/authenticate');
 const connection = mongoose.connection;
-const User = require('./models/User.js');
 require('dotenv').config();
+const app  = express();
 
+//Middlewares
+app.use(cors());
+app.use(bodyParser.json());
+
+//Router
+app.use('/login', require('./routes/login'));
+
+//Connect to database
 const uri = process.env.URI;
 mongoose.connect(uri, {useNewUrlParser: true});
-const app  = express();
-app.use(cors());
-
-//var testUser = new User({
-//	username: 'pppp',
-//	password: '123456'
-//});
-//testUser.save();
-
-User.findOne({ username: 'pppp' }, function(err, user) {
-    if (err) throw err;
-    // test a matching password
-    user.comparePassword('123456', function(err, isMatch) {
-        if (err) throw err;
-        console.log('123456:', isMatch); // -> Password123: true
-    });
-
-    // test a failing password
-    user.comparePassword('123Password', function(err, isMatch) {
-        if (err) throw err;
-		console.log('123Password:', isMatch); // -> 123Password: false
-	});
-});
-
 let gfs;
 connection.once('open', function() {
 	console.log('db connection established');
@@ -42,26 +27,27 @@ connection.once('open', function() {
 	});
 });
 
+//File storage configuration
 const storage = new GridFsStorage({
 	url: uri,
 	file: (req, file) => {
 	  return new Promise((resolve, reject) => {
 		  const fileInfo = {
 			filename: file.originalname,
-			bucketName: "uploads"
+			bucketName: "uploads",
+			user: req.user
 		  };
 		  resolve(fileInfo);
 	  });
 	}
 });
-
 const upload = multer({
 	storage
 });
 
-app.use(bodyParser.json());
 
-app.post('/upload', upload.single("file"), (req, res) => {
+//Handle file upload
+app.post('/upload', [authenicateJWT, upload.single("file")], (req, res) => {
 	if(!gfs){
 		return res.status(404).json({
 			err: "db not connected"
@@ -78,7 +64,8 @@ app.post('/upload', upload.single("file"), (req, res) => {
 	});
 });
 
-app.post('/delete', (req, res) => {
+//Handle file delete
+app.post('/delete', authenicateJWT ,(req, res) => {
 	const x = mongoose.mongo.ObjectId(req.body.fileId);
 	console.log(x);
 	gfs.delete(x)
@@ -93,11 +80,10 @@ app.post('/delete', (req, res) => {
 				return res.json(files);
 			});
 	});
-	
-
 });
 
-app.get("/files", (req, res) => {
+//Get all files
+app.get("/files", authenicateJWT, (req, res) => {
 	gfs.find().toArray((err, files) => {
 	  // check if files	
 	  if (!files) {
@@ -109,7 +95,8 @@ app.get("/files", (req, res) => {
 	});
 });
 
-app.get("/files/:file_id/:filename", (req, res) => {
+//Get a file by id
+app.get("/files/:file_id/:filename", authenicateJWT, (req, res) => {
 	const file = gfs.find({_id: req.params.file_id});
 	const x = mongoose.mongo.ObjectId(req.params.file_id);
 	console.log(x);
@@ -121,7 +108,6 @@ app.get("/files/:file_id/:filename", (req, res) => {
 	gfs.openDownloadStream(x).pipe(res);
 	res.setHeader('Content-Disposition', 'attachment');
 });
-
 
 
 const port = process.env.PORT || 8000;
