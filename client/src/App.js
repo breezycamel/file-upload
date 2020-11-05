@@ -9,34 +9,24 @@ import {
   Switch,
   Route,
   Link,
-  useHistory
 } from "react-router-dom";
 
 function App() {
   const { user, isAuthenticated, isLoading } =  useAuth0();
-  const [isLoggedIn, setIsLoggedIn] = useState();
-  const history = useHistory();
-  //if(isLoading){
-  //  return(
-  //    <div className='app'>
-  //      Loading....
-  //    </div>
-  //  );
-  //}
 
-  useEffect(() => {
-    console.log(isAuthenticated + " " + isLoading);
-    if(isLoading == false){
-      setIsLoggedIn(isAuthenticated);
-    }
-  }, [isLoading])
-  
+  if(isLoading){
+    return(
+      <div className='app'>
+        Loading....
+      </div>
+    );
+  }
 
   return (
     <div className="app">
       
       <Router>
-        <NavBar isLoggedIn={isLoggedIn} history={history}/>
+        <NavBar isLoggedIn={isAuthenticated} />
         <Switch>
           <Route path='/login'>
             <Login isLoggedIn={isAuthenticated}/>
