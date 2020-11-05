@@ -1,54 +1,49 @@
 import React, {useState,useEffect} from 'react';
 import axios from 'axios';
 import './App.css';
-import download from 'downloadjs';
+import Login from './components/Login';
+import NavBar from './components/NavBar.js';
+import { useAuth0 } from "@auth0/auth0-react";
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  Link,
+  useHistory
+} from "react-router-dom";
 
 function App() {
-  const [inputFile, setInputFile] = useState();
-  const [files, setFiles] = useState([]);
+  const { user, isAuthenticated, isLoading } =  useAuth0();
+  const [isLoggedIn, setIsLoggedIn] = useState();
+  const history = useHistory();
+  //if(isLoading){
+  //  return(
+  //    <div className='app'>
+  //      Loading....
+  //    </div>
+  //  );
+  //}
 
-  function  getFile(){
-      download("http://localhost:8000/files/3.pdf", "3.pdf");
-  }
-
-  function removeFile(i){
-    console.log(i);
-    axios.post("http://localhost:8000/delete", {fileId: files[i]._id})
-      .then(res => setFiles(res.data));
-  }
-  
-  //this hook upload file and retrieve new list of files
   useEffect(() => {
-    const data = new FormData();
-    data.append('file', inputFile);
-    axios.post("http://localhost:8000/upload", data, {})
-      .then(res => setFiles(res.data));
-  },[inputFile]);
+    console.log(isAuthenticated + " " + isLoading);
+    if(isLoading == false){
+      setIsLoggedIn(isAuthenticated);
+    }
+  }, [isLoading])
+  
 
   return (
-    <div className="App">
-      <div className="input-container">
-        <div className="file-input-form">
-          <label className="file-input-label" htmlFor="file-input">Upload Your Files</label>
-          <input type="file" id="file-input" onChange={(e) => setInputFile(e.target.files[0])}/>    
-        </div>
-      </div>
-
-      {files.map((file,i) =>
-        <File key={i} file={file} index={i} removeFile={removeFile}/>
-      )}
-    </div>
-  );
-}
-
-function File({file, index, removeFile}){
-
-  return(
-    <div className="file-container">
-      <div className="file-name">
-        {file.filename}
-      </div>
-      <div className="delete-file" onClick={() => removeFile(index)}>&#10006;</div>
+    <div className="app">
+      
+      <Router>
+        <NavBar isLoggedIn={isLoggedIn} history={history}/>
+        <Switch>
+          <Route path='/login'>
+            <Login isLoggedIn={isAuthenticated}/>
+          </Route>
+        </Switch>
+      </Router>
+      
     </div>
   );
 }

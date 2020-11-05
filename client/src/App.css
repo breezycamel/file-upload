@@ -1,4 +1,26 @@
-.App {
+ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: #333;
+}
+
+li {
+  float: left;
+}
+
+li a, li div{
+  display: block;
+  color: white;
+  text-align: center;
+  padding: 14px 16px;
+  text-decoration: none;
+}
+
+
+li a:hover, li div:hover {
+  background-color: #111;
 }
 
 .input-container{
@@ -25,9 +47,14 @@
   display: none;
 }
 
+.file-container{
+  width: 40rem;
+  margin: auto;
+  display: flex;
+  justify-content: space-between;
+}
+
 .delete-file{
-  position: absolute;
-  right: 0;
   -webkit-touch-callout: none; /* iOS Safari */
     -webkit-user-select: none; /* Safari */
      -khtml-user-select: none; /* Konqueror HTML */
