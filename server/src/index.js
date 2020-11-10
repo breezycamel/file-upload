@@ -4,17 +4,17 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const multer = require('multer');
 const GridFsStorage = require('multer-gridfs-storage');
-const authenicateJWT = require('./middleware/authenticate');
+
 const connection = mongoose.connection;
+const axios = require('axios');
 require('dotenv').config();
 const app  = express();
 
 //Middlewares
 app.use(cors());
 app.use(bodyParser.json());
-
-//Router
-app.use('/login', require('./routes/login'));
+const auth0 = require('./middleware/authenticate');
+const	authenticate = [auth0.checkJwt, auth0.getUserId];
 
 //Connect to database
 const uri = process.env.URI;
@@ -25,6 +25,16 @@ connection.once('open', function() {
 	gfs = new mongoose.mongo.GridFSBucket(connection.db, {
 		bucketName: "uploads"
 	});
+});
+
+//Router
+app.use('/login', require('./routes/login'));
+
+app.get('/authenticate', authenticate, async (req, res) =>  {
+	console.log("Success");
+	
+	console.log(req.email);
+	return res.status(200).json({message: 'success'});
 });
 
 //File storage configuration
@@ -47,7 +57,7 @@ const upload = multer({
 
 
 //Handle file upload
-app.post('/upload', [authenicateJWT, upload.single("file")], (req, res) => {
+app.post('/upload', [authenticate[0],authenticate[1], upload.single("file")], (req, res) => {
 	if(!gfs){
 		return res.status(404).json({
 			err: "db not connected"
@@ -65,7 +75,7 @@ app.post('/upload', [authenicateJWT, upload.single("file")], (req, res) => {
 });
 
 //Handle file delete
-app.post('/delete', authenicateJWT ,(req, res) => {
+app.post('/delete', authenticate ,(req, res) => {
 	const x = mongoose.mongo.ObjectId(req.body.fileId);
 	console.log(x);
 	gfs.delete(x)
@@ -83,7 +93,7 @@ app.post('/delete', authenicateJWT ,(req, res) => {
 });
 
 //Get all files
-app.get("/files", authenicateJWT, (req, res) => {
+app.get("/files", authenticate, (req, res) => {
 	gfs.find().toArray((err, files) => {
 	  // check if files	
 	  if (!files) {
@@ -96,7 +106,7 @@ app.get("/files", authenicateJWT, (req, res) => {
 });
 
 //Get a file by id
-app.get("/files/:file_id/:filename", authenicateJWT, (req, res) => {
+app.get("/files/:file_id/:filename", authenticate, (req, res) => {
 	const file = gfs.find({_id: req.params.file_id});
 	const x = mongoose.mongo.ObjectId(req.params.file_id);
 	console.log(x);
@@ -109,11 +119,7 @@ app.get("/files/:file_id/:filename", authenicateJWT, (req, res) => {
 	res.setHeader('Content-Disposition', 'attachment');
 });
 
-
 const port = process.env.PORT || 8000;
 app.listen(port, () => {
 	console.log(`Listening at http://localhost:8000`);
 });
-
-
-
