@@ -1,6 +1,8 @@
 const jwt = require('express-jwt');
 const jwtAuthz = require('express-jwt-authz');
 const jwksRsa = require('jwks-rsa');
+const axios = require('axios');
+
 //Middleware for authenticating requests and getting user email from access token
 module.exports = {
 	checkJwt : jwt({

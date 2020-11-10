@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const multer = require('multer');
 const GridFsStorage = require('multer-gridfs-storage');
+const upload = require('./routes/upload.js')
 
 const connection = mongoose.connection;
 const axios = require('axios');
@@ -28,50 +29,13 @@ connection.once('open', function() {
 });
 
 //Router
-app.use('/login', require('./routes/login'));
+app.use('/upload', upload);
 
 app.get('/authenticate', authenticate, async (req, res) =>  {
 	console.log("Success");
 	
 	console.log(req.email);
 	return res.status(200).json({message: 'success'});
-});
-
-//File storage configuration
-const storage = new GridFsStorage({
-	url: uri,
-	file: (req, file) => {
-	  return new Promise((resolve, reject) => {
-		  const fileInfo = {
-			filename: file.originalname,
-			bucketName: "uploads",
-			user: req.user
-		  };
-		  resolve(fileInfo);
-	  });
-	}
-});
-const upload = multer({
-	storage
-});
-
-
-//Handle file upload
-app.post('/upload', [authenticate[0],authenticate[1], upload.single("file")], (req, res) => {
-	if(!gfs){
-		return res.status(404).json({
-			err: "db not connected"
-		});
-	}
-	gfs.find().toArray((err, files) => {
-		// check if files	
-		if (!files) {
-		  return res.status(404).json({
-			err: "no files exist"
-		  });
-		}
-		return res.json(files);
-	});
 });
 
 //Handle file delete
