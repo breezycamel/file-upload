@@ -17,18 +17,16 @@ connection.once('open', function() {
 	});
 });
 
-route.get('/public', (req, res) => {
-	Access.find({user:['public']}, (err, accesses) => {
-		console.log(accesses);
-	});
+route.get('/public', async (req, res) => {
+	return  res.json(await Access.find({user :'public'}));
 });
 
-route.get('/shared', authenticate, (req, res) => {
-	
+route.get('/shared', authenticate, async (req, res) => {
+	return  res.json(await Access.find({user : req.email}));
 });
 
-route.get('/private', authenticate, (req, res) => {
-	
+route.get('/private', authenticate, async (req, res) => {
+	return res.json(await Access.find({owner: req.email}));
 });
 
 route.post('/addaccess', authenticate, (req, res) => {
@@ -54,6 +52,16 @@ route.post('/removeaccess', authenticate, (req, res) => {
 		}
 		return res.status(200).json({message: "Success"});
 	});
+});
+
+//Handle file delete
+route.post('/delete', authenticate , async (req, res) => {
+	const id = mongoose.mongo.ObjectId(req.body.file_id);
+	console.log(id);
+	await gfs.delete(id);
+	await Access.deleteOne({file_id: req.body.file_id});
+	const files = await Access.find({owner : req.email});
+	return res.json(files);
 });
 
 module.exports = route;
