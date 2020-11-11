@@ -2,9 +2,6 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const multer = require('multer');
-const GridFsStorage = require('multer-gridfs-storage');
-const upload = require('./routes/upload.js')
 
 const connection = mongoose.connection;
 const axios = require('axios');
@@ -29,14 +26,8 @@ connection.once('open', function() {
 });
 
 //Router
-app.use('/upload', upload);
-
-app.get('/authenticate', authenticate, async (req, res) =>  {
-	console.log("Success");
-	
-	console.log(req.email);
-	return res.status(200).json({message: 'success'});
-});
+app.use('/upload', require('./routes/upload'));
+app.use('/file', require('./routes/file'));
 
 //Handle file delete
 app.post('/delete', authenticate ,(req, res) => {
@@ -70,7 +61,7 @@ app.get("/files", authenticate, (req, res) => {
 });
 
 //Get a file by id
-app.get("/files/:file_id/:filename", authenticate, (req, res) => {
+app.get("/files/:file_id/:filename", (req, res) => {
 	const file = gfs.find({_id: req.params.file_id});
 	const x = mongoose.mongo.ObjectId(req.params.file_id);
 	console.log(x);
