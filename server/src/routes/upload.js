@@ -56,8 +56,8 @@ route.post('/', [authenticate[0],authenticate[1], upload.single("file")], async 
 			err: "db not connected"
 		});
 	}
-	const files = await Access.find({owner : req.email});
-	return res.json(files);
+	
+	return res.json(await Access.find({owner : req.email}));
 });
 
 module.exports = route;
