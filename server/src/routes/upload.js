@@ -41,7 +41,7 @@ const auth0 = require('../middleware/authenticate');
 const	authenticate = [auth0.checkJwt, auth0.getUserId];
 
 //Handle upload
-route.post('/', [authenticate[0],authenticate[1], upload.single("file")], (req, res) => {
+route.post('/', [authenticate[0],authenticate[1], upload.single("file")], async (req, res) => {
 	console.log(req.file);
 	const access = new Access({
 		file_id: req.file.id, 
@@ -56,15 +56,8 @@ route.post('/', [authenticate[0],authenticate[1], upload.single("file")], (req, 
 			err: "db not connected"
 		});
 	}
-	gfs.find().toArray((err, files) => {
-		// check if files	
-		if (!files) {
-		  return res.status(404).json({
-			err: "no files exist"
-		  });
-		}
-		return res.json(files);
-	});
+	const files = await Access.find({owner : req.email});
+	return res.json(files);
 });
 
 module.exports = route;
