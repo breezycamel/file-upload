@@ -47,6 +47,7 @@ route.post('/', [authenticate[0],authenticate[1], upload.single("file")], async 
 		file_id: req.file.id, 
 		file_name: req.file.originalname, 
 		owner: req.email, 
+		uploadDate: req.file.uploadDate,
 		user: []}
 	);
 	access.save();
