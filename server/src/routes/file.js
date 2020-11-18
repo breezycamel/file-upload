@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const connection = mongoose.connection;
 
 const auth0 = require('../middleware/authenticate');
-const	authenticate = [auth0.checkJwt, auth0.getUserId];
+const	authenticate = [auth0.checkJwt, auth0.handleError, auth0.getUserId];
 
 //Connect to database
 const uri = process.env.URI;
@@ -15,6 +15,20 @@ connection.once('open', function() {
 	gfs = new mongoose.mongo.GridFSBucket(connection.db, {
 		bucketName: "uploads"
 	});
+});
+
+//Get a file by id
+route.get("/download/:file_id", authenticate, (req, res) => {
+	const file = gfs.find({_id: req.params.file_id});
+	const x = mongoose.mongo.ObjectId(req.params.file_id);
+	console.log(x);
+	if(!file || file.length === 0){
+		return res.status(404).json({
+			err: "no files exist"
+		});
+	}
+	gfs.openDownloadStream(x).pipe(res);
+	res.setHeader('Content-Disposition', 'attachment');
 });
 
 route.get('/public', async (req, res) => {

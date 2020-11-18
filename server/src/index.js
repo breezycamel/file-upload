@@ -29,51 +29,6 @@ connection.once('open', function() {
 app.use('/upload', require('./routes/upload'));
 app.use('/file', require('./routes/file'));
 
-//Handle file delete
-app.post('/delete', authenticate ,(req, res) => {
-	const x = mongoose.mongo.ObjectId(req.body.fileId);
-	console.log(x);
-	gfs.delete(x)
-		.then(() => {
-			gfs.find().toArray((err, files) => {
-				// check if files	
-				if (!files) {
-				return res.status(404).json({
-					err: "no files exist"
-				});
-				}
-				return res.json(files);
-			});
-	});
-});
-
-//Get all files
-app.get("/files", authenticate, (req, res) => {
-	gfs.find().toArray((err, files) => {
-	  // check if files	
-	  if (!files) {
-		return res.status(404).json({
-		  err: "no files exist"
-		});
-	  }
-	  return res.json(files);
-	});
-});
-
-//Get a file by id
-app.get("/files/:file_id/:filename", (req, res) => {
-	const file = gfs.find({_id: req.params.file_id});
-	const x = mongoose.mongo.ObjectId(req.params.file_id);
-	console.log(x);
-	if(!file || file.length === 0){
-		return res.status(404).json({
-			err: "no files exist"
-		});
-	}
-	gfs.openDownloadStream(x).pipe(res);
-	res.setHeader('Content-Disposition', 'attachment');
-});
-
 const port = process.env.PORT || 8000;
 app.listen(port, () => {
 	console.log(`Listening at http://localhost:8000`);

@@ -22,9 +22,16 @@ module.exports = {
 		algorithms: ['RS256']
 	}),
 
+	handleError : (err, req, res, next) => {
+		if(err.name === 'UnauthorizedError') {
+      return res.status(err.status).send({message:err.message});
+      
+    }
+		next();
+	},
+
 	getUserId : async (req, res, next) => {
-		console.log("Success");
-		
+		console.log(req);
 		const user = await axios({
 			method: 'get',
 			url: 'https://dev-kz08advs.us.auth0.com/userinfo',
@@ -33,6 +40,7 @@ module.exports = {
 				'Authorization': req.headers.authorization
 			}
 		});
+		console.log(user);
 		req.email = user.data.email;
 		next();
 	}

@@ -38,11 +38,11 @@ const upload = multer({
 
 //Middleware
 const auth0 = require('../middleware/authenticate');
-const	authenticate = [auth0.checkJwt, auth0.getUserId];
+const	authenticate = [auth0.checkJwt, auth0.handleError, auth0.getUserId];
 
 //Handle upload
-route.post('/', [authenticate[0],authenticate[1], upload.single("file")], async (req, res) => {
-	console.log(req.file);
+route.post('/', [authenticate[0], authenticate[2], authenticate[1], upload.single("file")], async (req, res) => {
+	console.log(req.email);
 	const access = new Access({
 		file_id: req.file.id, 
 		file_name: req.file.originalname, 
