@@ -29,39 +29,52 @@ route.get('/private', authenticate, async (req, res) => {
 	return res.json(await Access.find({owner: req.email}));
 });
 
+//Handle adding a user's access to a file
 route.post('/addaccess', authenticate, (req, res) => {
-	Access.findOne({file_id: req.body.file_id}, (err, access) => {
+	Access.findOne({file_id: req.body.file_id}, async (err, access) => {
 		if(access == null) return res.status(400).json({message: "File not found"});
-
+		
 		if(!access.user.includes(req.body.user_id)){
-			access.user.push();
-			access.save();
+			access.user.push(req.body.user_id);
+			await access.save();
 		}
-		return res.status(200).json({message: "Success"});
+		const files = await Access.find({owner : req.email});
+		return res.json(files);
 	});
 });
 
+//Handle removing a user's access to a file
 route.post('/removeaccess', authenticate, (req, res) => {
-	Access.findOne({file_id: req.body.file_id}, (err, access) => {
+	Access.findOne({file_id: req.body.file_id}, async (err, access) => {
 		if(access == null) return res.status(400).json({message: "File not found"});
+		if(access.owner != req.email) return res.status(401);
 
 		const index = access.user.indexOf(req.body.user_id);
 		if(index >= 0){
 			access.user.splice(index,1);
-			access.save();
+			await access.save();
 		}
-		return res.status(200).json({message: "Success"});
+
+		const files = await Access.find({owner : req.email});
+		return res.json(files);
 	});
 });
 
 //Handle file delete
-route.post('/delete', authenticate , async (req, res) => {
+route.post('/delete', authenticate , (req, res) => {
 	const id = mongoose.mongo.ObjectId(req.body.file_id);
 	console.log(id);
-	await gfs.delete(id);
-	await Access.deleteOne({file_id: req.body.file_id});
-	const files = await Access.find({owner : req.email});
-	return res.json(files);
+
+	Access.findOne({file_id: req.body.file_id}, async (err, access) => {
+		if(access == null) return res.status(400).json({message: "File not found"});
+		if(access.owner != req.email) return res.status(401);
+
+		await Access.deleteOne({file_id: req.body.file_id});
+		await gfs.delete(id);
+
+		const files = await Access.find({owner : req.email});
+		return res.json(files);
+	});
 });
 
 module.exports = route;
