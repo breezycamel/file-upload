@@ -9,7 +9,20 @@ function MyFile({accessToken}) {
   console.log(accessToken);
   
   async function getFile(i){
-    window.location.href = `http://localhost:8000/file/download/${files[i]._id}`;
+    axios.get(`http://localhost:8000/file/download/${files[i].file_id}`,{
+      headers : {
+        'Authorization' : 'Bearer ' + accessToken
+      },
+      responseType: 'blob'
+    })
+    .then(res => {;
+      var url = window.URL.createObjectURL(res.data);
+      var anchor = document.createElement("a");
+      anchor.download = files[i].file_name;
+      anchor.href = url;
+      anchor.click();
+    });
+    
   }
 
   function removeFile(i){
@@ -39,6 +52,7 @@ function MyFile({accessToken}) {
   //This hook upload file and retrieve new list of files
   useEffect(() => {
     if (inputFile != null){
+      console.log(inputFile);
       const data = new FormData();
       data.append('file', inputFile);
       axios.post("http://localhost:8000/upload", data, {
