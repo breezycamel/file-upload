@@ -31,7 +31,6 @@ module.exports = {
 	},
 
 	getUserId : async (req, res, next) => {
-		console.log(req);
 		const user = await axios({
 			method: 'get',
 			url: 'https://dev-kz08advs.us.auth0.com/userinfo',
@@ -40,7 +39,6 @@ module.exports = {
 				'Authorization': req.headers.authorization
 			}
 		});
-		console.log(user);
 		req.email = user.data.email;
 		next();
 	}
