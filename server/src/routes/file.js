@@ -18,17 +18,20 @@ connection.once('open', function() {
 });
 
 //Get a file by id
-route.get("/download/:file_id", authenticate, (req, res) => {
-	const file = gfs.find({_id: req.params.file_id});
-	const x = mongoose.mongo.ObjectId(req.params.file_id);
-	console.log(x);
+route.get("/download/:file_id",authenticate, async (req, res) => {
+	const fileId = mongoose.mongo.ObjectId(req.params.file_id);
+	const file = await gfs.find({_id: fileId}).toArray();
 	if(!file || file.length === 0){
 		return res.status(404).json({
 			err: "no files exist"
 		});
 	}
-	gfs.openDownloadStream(x).pipe(res);
-	res.setHeader('Content-Disposition', 'attachment');
+	console.log(file);
+	res.set({
+		'Content-disposition': `attachment; filename=${file[0].filename}`,
+		'Content-Type': file[0].contentType
+	});
+	gfs.openDownloadStream(fileId).pipe(res);
 });
 
 route.get('/public', async (req, res) => {
